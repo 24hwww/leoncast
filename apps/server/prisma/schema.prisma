@@ -1,0 +1,38 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String // Hashed
+}
+
+model Channel {
+  id          String     @id @default(uuid())
+  name        String
+  streamKey   String     @unique
+  rtmpUrl     String?
+  status      String     @default("IDLE")
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  scenarios   Scenario[]
+}
+
+model Scenario {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  config      Json     // Configuration for the Canvas/WebGL renderer
+  channelId   String
+  channel     Channel  @relation(fields: [channelId], references: [id])
+  isActive    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

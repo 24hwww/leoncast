@@ -1,0 +1,60 @@
+{
+  "name": "leoncast",
+  "version": "2.0.0",
+  "description": "Dynamic Streaming Platform with Clean Architecture",
+  "main": "apps/server/index.js",
+  "scripts": {
+    "dev": "node --watch apps/server/index.js",
+    "dev:frontend": "cd apps/web && npm run dev",
+    "start": "node apps/server/index.js",
+    "build": "cd apps/web && npm run build",
+    "prisma:generate": "prisma generate --schema=./apps/server/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate dev --schema=./apps/server/prisma/schema.prisma",
+    "prisma:push": "prisma db push --schema=./apps/server/prisma/schema.prisma",
+    "prisma:studio": "prisma studio --schema=./apps/server/prisma/schema.prisma",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f backend",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "streaming",
+    "fastify",
+    "prisma",
+    "clean-architecture",
+    "ffmpeg"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.2.0",
+    "@fastify/jwt": "^10.0.0",
+    "@fastify/reply-from": "^12.5.0",
+    "@fastify/static": "^9.0.0",
+    "@fastify/websocket": "^11.2.0",
+    "@prisma/client": "^5.5.2",
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^16.3.1",
+    "fastify": "^5.6.2",
+    "fastify-plugin": "^5.1.0",
+    "fluent-ffmpeg": "^2.1.2",
+    "fs-extra": "^11.3.3",
+    "ioredis": "^5.3.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@vitest/ui": "^3.2.4",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.26",
+    "globals": "^16.5.0",
+    "nodemon": "^3.0.1",
+    "prisma": "^5.5.2",
+    "vitest": "^3.2.4"
+  }
+}
