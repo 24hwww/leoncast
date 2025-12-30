@@ -112,7 +112,10 @@ async function createServer() {
     if (container.config.nodeEnv === 'development' && process.env.VITE_URL) {
         await app.register(require('@fastify/reply-from'), {
             base: process.env.VITE_URL,
-            http2: false
+            undici: {
+                connections: 100, // Increase connection pool for many small Vite files
+                pipelining: 10
+            }
         })
     }
 
@@ -232,6 +235,26 @@ async function createServer() {
                     }
                     channelSockets.get(channelId).add(socket)
                     fastify.log.info(`WebSocket client connected to channel:${channelId}${scenarioId ? ` (via scenario:${scenarioId})` : ''}`)
+                } else if (container.config.nodeEnv === 'development') {
+                    // Proxy unknown WebSockets to Vite for HMR
+                    const WebSocket = require('ws')
+                    const targetUrl = process.env.VITE_URL?.replace('http', 'ws') || 'ws://frontend:5173'
+                    const proxySocket = new WebSocket(`${targetUrl}${req.url}`)
+
+                    proxySocket.on('open', () => {
+                        socket.on('message', (data) => proxySocket.send(data))
+                        proxySocket.on('message', (data) => socket.send(data))
+                    })
+
+                    proxySocket.on('error', (err) => {
+                        fastify.log.error(`Vite HMR Proxy Error: ${err.message}`)
+                        socket.close()
+                    })
+
+                    proxySocket.on('close', () => socket.close())
+                    socket.on('close', () => proxySocket.close())
+
+                    return // Don't continue with normal logic
                 } else {
                     fastify.log.warn('WebSocket connection attempted without channelId or scenarioId')
                     socket.close(1008, 'Missing channelId or scenarioId')
@@ -313,6 +336,10 @@ async function createServer() {
         }
 
         if (container.config.nodeEnv === 'development' && process.env.VITE_URL) {
+            // For SPA routing, if the browser wants HTML, we serve the root index
+            if (req.headers.accept && req.headers.accept.includes('text/html')) {
+                return reply.from('/')
+            }
             return reply.from(req.url)
         }
 

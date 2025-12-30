@@ -39,9 +39,10 @@ services:
     working_dir: /app/web
     volumes:
       - ./apps/web:/app/web
+      - /app/web/node_modules
     environment:
       - VITE_API_URL=http://localhost:3000
-    command: sh -c "npm install && npm run dev -- --host"
+    command: sh -c "[ -f node_modules/.bin/vite ] || npm install; npm run dev -- --host"
     ports:
       - "5173:5173"
 
@@ -83,14 +84,14 @@ services:
       - ./apps/renderer:/app/renderer
     command: >
       sh -c "apt-get update && 
-             apt-get install -y chromium fonts-freefont-ttf --no-install-recommends && 
+             apt-get install -y chromium curl fonts-freefont-ttf --no-install-recommends && 
              npm install && 
              node index.js"
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      test: [ "CMD", "curl", "-f", "http://localhost:5000/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:

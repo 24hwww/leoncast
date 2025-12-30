@@ -76,7 +76,7 @@ class ScenarioUseCases {
     }
 
     async _createScenarioFiles(scenario) {
-        const scenarioDir = path.join(this.config.scenariosPath, scenario.id)
+        const scenarioDir = path.resolve(this.config.scenariosPath, scenario.id)
         await fs.ensureDir(scenarioDir)
 
         // Create default files
@@ -214,8 +214,13 @@ connectWS();`
     }
 
     async _deleteScenarioFiles(scenarioId) {
-        const scenarioDir = path.join(this.config.scenariosPath, scenarioId)
-        await fs.remove(scenarioDir)
+        const scenarioDir = path.resolve(this.config.scenariosPath, scenarioId)
+        if (await fs.pathExists(scenarioDir)) {
+            await fs.remove(scenarioDir)
+            console.log(`[ScenarioUseCases] Deleted associated folder: ${scenarioDir}`)
+        } else {
+            console.warn(`[ScenarioUseCases] Folder not found for scenario ${scenarioId} at ${scenarioDir}`)
+        }
     }
 }
 
