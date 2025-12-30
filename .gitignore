@@ -7,7 +7,6 @@ dist/
 build/
 apps/web/dist/
 apps/web/build/
-web/
 
 # Environment
 .env
