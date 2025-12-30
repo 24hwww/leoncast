@@ -6,45 +6,26 @@ services:
     restart: always
     ports:
       - "3000:3000"
-      - "3005:3000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - REDIS_URL=${REDIS_URL}
       - RESTREAMER_URL=${RESTREAMER_URL}
       - RENDERER_URL=http://renderer:5000
-      - NODE_ENV=development
+      - NODE_ENV=production
       - ADMIN_EMAIL=${ADMIN_EMAIL}
       - ADMIN_PASSW=${ADMIN_PASSW}
-      - JWT_SECRET=${JWT_SECRET:-leoncast-super-secret-jwt-key-for-dev-production}
-      - COOKIE_SECRET=${COOKIE_SECRET:-leoncast-super-secret-cookie-key-for-dev-production}
-      - VITE_URL=http://frontend:5173
+      - JWT_SECRET=${JWT_SECRET}
+      - COOKIE_SECRET=${COOKIE_SECRET}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-      frontend:
-        condition: service_started
-    volumes:
-      - ./apps/server:/app/apps/server
-      - ./apps/scenarios:/app/apps/scenarios
     healthcheck:
       test: [ "CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" ]
       interval: 30s
       timeout: 3s
       retries: 3
-
-  frontend:
-    image: node:20-alpine
-    working_dir: /app/web
-    volumes:
-      - ./apps/web:/app/web
-      - /app/web/node_modules
-    environment:
-      - VITE_API_URL=http://localhost:3000
-    command: sh -c "[ -f node_modules/.bin/vite ] || npm install; npm run dev -- --host"
-    ports:
-      - "5173:5173"
 
   postgres:
     image: postgres:15-alpine
@@ -59,8 +40,6 @@ services:
       retries: 5
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
 
   redis:
     image: redis:7-alpine
@@ -71,22 +50,14 @@ services:
       retries: 5
     volumes:
       - redis_data:/data
-    ports:
-      - "6380:6379"
 
   renderer:
-    image: node:20-slim
-    working_dir: /app/renderer
+    build:
+      context: ./apps/renderer
+      dockerfile: Dockerfile
+    restart: always
     environment:
-      - CHROME_PATH=/usr/bin/chromium
       - BACKEND_URL=http://backend:3000
-    volumes:
-      - ./apps/renderer:/app/renderer
-    command: >
-      sh -c "apt-get update && 
-             apt-get install -y chromium curl fonts-freefont-ttf --no-install-recommends && 
-             npm install && 
-             node index.js"
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:5000/health || exit 1" ]
       interval: 10s
